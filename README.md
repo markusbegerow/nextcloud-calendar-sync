@@ -1,6 +1,6 @@
 # Calendar Sync for Nextcloud
 
-> Bidirectional calendar synchronization between Nextcloud and external CalDAV servers.
+<img alt="nextcloud-calendar-sync" src="https://github.com/user-attachments/assets/cb54935c-af12-410e-977d-36a952c05ed1" />
 
 **Calendar Sync** lets you connect your Nextcloud calendar to any CalDAV server - keeping both sides in sync automatically, every 30 minutes. Multiple external sources, configurable sync direction, and secure encrypted credential storage are all built in.
 
