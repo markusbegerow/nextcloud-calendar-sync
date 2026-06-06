@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+    <id>calendar-sync</id>
+    <name>Calendar Sync</name>
+    <summary>Bidirectional calendar synchronization with external CalDAV servers</summary>
+    <description><![CDATA[
+        Calendar Sync enables bidirectional synchronization between your Nextcloud calendar and external CalDAV servers.
+        Features:
+        - Automatic two-way sync with conflict resolution
+        - Support for multiple external calendar sources
+        - Efficient incremental sync using UID snapshot comparison for reliable cross-server deletion detection
+        - Secure credential storage
+        - Manual and scheduled sync options
+    ]]></description>
+    <version>1.0.0</version>
+    <licence>gpl</licence>
+    <author mail="mail@markus-begerow.de">Markus Begerow</author>
+    <namespace>CalDavSync</namespace>
+    <category>office</category>
+    <website>https://github.com/markusbegerow/nextcloud-calendar-sync</website>
+    <bugs>https://github.com/markusbegerow/nextcloud-calendar-sync/issues</bugs>
+    <repository type="git">https://github.com/markusbegerow/nextcloud-calendar-sync.git</repository>
+    
+    <dependencies>
+        <nextcloud min-version="20" max-version="33"/>
+        <app>calendar</app>
+    </dependencies>
+    
+    <navigations>
+        <navigation>
+            <name>Sync</name>
+            <route>calendar-sync.page.index</route>
+            <icon>app.svg</icon>
+        </navigation>
+    </navigations>
+    
+    <settings>
+        <admin>OCA\CalDavSync\Settings\AdminSettings</admin>
+        <personal>OCA\CalDavSync\Settings\PersonalSettings</personal>
+    </settings>
+    
+    <background-jobs>
+        <job>OCA\CalDavSync\BackgroundJob\SyncJob</job>
+    </background-jobs>
+</info>

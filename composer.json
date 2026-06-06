@@ -1,0 +1,22 @@
+{
+    "name": "nextcloud/caldav-sync",
+    "description": "Bidirectional CalDAV synchronization app for Nextcloud",
+    "type": "nextcloud-app",
+    "license": "GPL-3.0",
+    "authors": [
+        {
+            "name": "Markus Begerow",
+            "email": "mail@markus-begerow.de"
+        }
+    ],
+    "require": {
+        "php": ">=8.0",
+        "sabre/dav": "^4.4",
+        "sabre/vobject": "^4.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "OCA\\CalDavSync\\": "lib/"
+        }
+    }
+}
