@@ -113,7 +113,7 @@ class ConfigService {
         if (isset($data['username'])) {
             $qb->set('username', $qb->createNamedParameter($data['username']));
         }
-        if (isset($data['password'])) {
+        if (!empty($data['password'])) {
             $encryptedPassword = $this->crypto->encrypt($data['password']);
             $qb->set('password', $qb->createNamedParameter($encryptedPassword));
         }
