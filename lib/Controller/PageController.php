@@ -17,7 +17,7 @@ class PageController extends Controller {
      * @NoCSRFRequired
      */
     public function index(): TemplateResponse {
-        Util::addScript('calendar-sync', 'vendor/jquery.min');
+        Util::addScript('calendar-sync', 'lib/jquery.min');
         Util::addScript('calendar-sync', 'calendar-sync-main');
         Util::addStyle('calendar-sync', 'style');
         

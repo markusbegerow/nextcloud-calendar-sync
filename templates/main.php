@@ -1,5 +1,5 @@
 <?php
-script('calendar-sync', 'vendor/jquery.min');
+script('calendar-sync', 'lib/jquery.min');
 script('calendar-sync', 'calendar-sync-main');
 style('calendar-sync', 'style');
 ?>
