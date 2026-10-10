@@ -333,7 +333,7 @@
             const data = {
                 url:       $('#config-url').val(),
                 username:  $('#config-username').val(),
-password: <redacted>
+                password: $('#config-password').val(),
                 auth_type: $('#config-auth-type').val()
             };
             $.post(this.baseUrl + '/api/configs/test', data)
