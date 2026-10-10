@@ -261,6 +261,7 @@
                 $('#config-calendar').val(config.calendar_selection || 'personal');
                 $('#config-sync-direction').val(config.sync_direction || 'bidirectional');
                 $('#config-duplicate-handling').val(config.duplicate_handling || 'update_newer');
+                $('#config-auth-type').val(config.auth_type || 'digest');
             } else {
                 $('#modal-title').text(t('calendar-sync', 'Add Configuration'));
                 $('#config-form')[0].reset();
@@ -289,7 +290,8 @@
                 enabled:            $('#config-enabled').is(':checked'),
                 calendar_selection: $('#config-calendar').val(),
                 sync_direction:     $('#config-sync-direction').val(),
-                duplicate_handling: $('#config-duplicate-handling').val()
+                duplicate_handling: $('#config-duplicate-handling').val(),
+                auth_type:          $('#config-auth-type').val()
             };
             const url    = configId
                 ? this.baseUrl + '/api/configs/' + configId
@@ -329,9 +331,10 @@
 
         testConnection: function() {
             const data = {
-                url:      $('#config-url').val(),
-                username: $('#config-username').val(),
-                password: $('#config-password').val()
+                url:       $('#config-url').val(),
+                username:  $('#config-username').val(),
+password: <redacted>
+                auth_type: $('#config-auth-type').val()
             };
             $.post(this.baseUrl + '/api/configs/test', data)
                 .done(function(response) {

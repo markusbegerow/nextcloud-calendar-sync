@@ -45,11 +45,12 @@ class SyncService {
             ]);
 
             // Connect to external CalDAV server
+            $authType = $config['auth_type'] ?? 'digest';
             $client = new Client([
                 'baseUri' => $config['url'],
                 'userName' => $config['username'],
                 'password' => $config['password'],
-                'authType' => Client::AUTH_DIGEST  // Use Digest auth for All-Inkl compatibility
+                'authType' => $authType === 'basic' ? Client::AUTH_BASIC : Client::AUTH_DIGEST
             ]);
 
             $userId = $config['user_id'];

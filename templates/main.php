@@ -241,6 +241,15 @@ style('calendar-sync', 'style');
             </div>
 
             <div class="form-group">
+                <label for="config-auth-type"><?php p($l->t('Authentication Type')); ?></label>
+                <select id="config-auth-type" required>
+                    <option value="digest"><?php p($l->t('Digest')); ?></option>
+                    <option value="basic"><?php p($l->t('Basic')); ?></option>
+                </select>
+                <small><?php p($l->t('Use Basic for most servers (e.g. SmarterMail); Digest for All-Inkl')); ?></small>
+            </div>
+
+            <div class="form-group">
                 <label for="config-calendar"><?php p($l->t('Nextcloud Calendar')); ?></label>
                 <select id="config-calendar" required>
                     <option value="personal"><?php p($l->t('Personal (Default)')); ?></option>

@@ -62,10 +62,11 @@ class ConfigController extends Controller {
         bool $enabled = true,
         string $calendar_selection = 'personal',
         string $sync_direction = 'bidirectional',
-        string $duplicate_handling = 'update_newer'
+        string $duplicate_handling = 'update_newer',
+        string $auth_type = 'digest'
     ): DataResponse {
         try {
-            $config = $this->configService->createConfig($name, $url, $username, $password, $enabled, $calendar_selection, $sync_direction, $duplicate_handling);
+            $config = $this->configService->createConfig($name, $url, $username, $password, $enabled, $calendar_selection, $sync_direction, $duplicate_handling, $auth_type);
             return new DataResponse($config);
         } catch (\Exception $e) {
             $this->logger->error('Failed to create config: ' . $e->getMessage(), [
@@ -169,6 +170,7 @@ class ConfigController extends Controller {
             $url = $this->request->getParam('url');
             $username = $this->request->getParam('username');
             $password = $this->request->getParam('password');
+            $authType = $this->request->getParam('auth_type', 'digest');
 
             if (!$url || !$username || !$password) {
                 return new DataResponse([
@@ -177,7 +179,7 @@ class ConfigController extends Controller {
                 ]);
             }
 
-            $result = $this->configService->testNewConnection($url, $username, $password);
+            $result = $this->configService->testNewConnection($url, $username, $password, $authType);
             return new DataResponse($result);
         } catch (\Exception $e) {
             $this->logger->error('New connection test failed: ' . $e->getMessage(), [
