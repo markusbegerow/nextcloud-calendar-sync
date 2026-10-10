@@ -65,6 +65,8 @@ class ConfigService {
 
         $encryptedPassword = $this->crypto->encrypt($password);
         $now = new \DateTime();
+        $url = trim($url);
+        $username = trim($username);
 
         $qb = $this->db->getQueryBuilder();
         $qb->insert('caldav_sync_configs')
@@ -110,10 +112,10 @@ class ConfigService {
             $qb->set('name', $qb->createNamedParameter($data['name']));
         }
         if (isset($data['url'])) {
-            $qb->set('url', $qb->createNamedParameter($data['url']));
+            $qb->set('url', $qb->createNamedParameter(trim($data['url'])));
         }
         if (isset($data['username'])) {
-            $qb->set('username', $qb->createNamedParameter($data['username']));
+            $qb->set('username', $qb->createNamedParameter(trim($data['username'])));
         }
         if (isset($data['password'])) {
             $encryptedPassword = $this->crypto->encrypt($data['password']);
