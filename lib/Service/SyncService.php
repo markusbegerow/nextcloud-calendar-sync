@@ -847,8 +847,8 @@ class SyncService {
                 $uid = (string)$vcalendar->VEVENT->UID;
             }
             
-            // Create event on external server
-            $client->request('PUT', $uid . '.ics', $eventData, [
+            // Create event on external server (UID must be URL-encoded)
+            $client->request('PUT', rawurlencode($uid) . '.ics', $eventData, [
                 'Content-Type' => 'text/calendar'
             ]);
             
