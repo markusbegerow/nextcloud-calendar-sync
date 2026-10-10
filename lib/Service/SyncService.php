@@ -892,7 +892,7 @@ class SyncService {
     private function updateEventInExternal(Client $client, string $uid, string $eventData): void {
         try {
             $eventData = $this->addSyncSourceProperty($eventData, 'nextcloud');
-            $client->request('PUT', $uid . '.ics', $eventData, [
+            $client->request('PUT', rawurlencode($uid) . '.ics', $eventData, [
                 'Content-Type' => 'text/calendar'
             ]);
             $this->logger->debug("Updated event in external server: $uid");
@@ -904,7 +904,7 @@ class SyncService {
 
     private function deleteEventInExternal(Client $client, string $uid): void {
         try {
-            $client->request('DELETE', $uid . '.ics');
+            $client->request('DELETE', rawurlencode($uid) . '.ics');
             $this->logger->debug("Deleted event $uid from external server");
         } catch (\Exception $e) {
             $this->logger->error("Failed to delete event $uid from external server: " . $e->getMessage());
