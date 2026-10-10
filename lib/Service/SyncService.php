@@ -72,7 +72,7 @@ class SyncService {
                 throw new \Exception('No Nextcloud calendar found for user: ' . $userId);
             }
 
-            $nextcloudCalendar = new class($calendarData, $calDavBackend) {
+            $nextcloudCalendar = new class($calendarData, $this->calDavBackend) {
                 private array $info;
                 private $backend;
                 public function __construct(array $info, $backend) {
