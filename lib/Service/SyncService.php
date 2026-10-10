@@ -352,7 +352,7 @@ class SyncService {
             return $events;
         } catch (\Throwable $e) {
             $this->logger->error('Failed to fetch external events: ' . $e->getMessage());
-            throw $e;
+            return [];
         }
     }
 
