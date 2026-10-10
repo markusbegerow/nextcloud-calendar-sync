@@ -343,22 +343,26 @@ class SyncService {
         $events = [];
         
         try {
-            // First, try simple PROPFIND to list calendar contents (like Python caldav library does internally)
+            // Use CalDAV calendar-query REPORT (standard way to list events)
             $requestBody = '<?xml version="1.0" encoding="utf-8" ?>
-                <D:propfind xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+                <C:calendar-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
                     <D:prop>
                         <D:getetag />
-                        <D:getcontenttype />
-                        <D:resourcetype />
+                        <C:calendar-data />
                     </D:prop>
-                </D:propfind>';
+                    <C:filter>
+                        <C:comp-filter name="VCALENDAR">
+                            <C:comp-filter name="VEVENT" />
+                        </C:comp-filter>
+                    </C:filter>
+                </C:calendar-query>';
             
             $headers = [
                 'Depth' => '1',
                 'Content-Type' => 'application/xml'
             ];
             
-            $response = $client->request('PROPFIND', '', $requestBody, $headers);
+            $response = $client->request('REPORT', '', $requestBody, $headers);
 
             if (isset($response['body'])) {
                 $xmlBody = $response['body'];
@@ -399,25 +403,31 @@ class SyncService {
                 foreach ($responseNodes as $responseNode) {
                     // Register namespaces on each response node
                     $responseNode->registerXPathNamespace('d', 'DAV:');
+                    $responseNode->registerXPathNamespace('c', 'urn:ietf:params:xml:ns:caldav');
                     
                     // Get href from response node
                     $hrefNodes = $responseNode->xpath('d:href');
                     $href = $hrefNodes && count($hrefNodes) > 0 ? (string)$hrefNodes[0] : '';
                     
-                    // Get content type from propstat/prop structure - need to find the successful propstat
-                    $propstatNodes = $responseNode->xpath('d:propstat[d:status="HTTP/1.1 200 OK"]/d:prop/d:getcontenttype');
-                    $contentType = $propstatNodes && count($propstatNodes) > 0 ? (string)$propstatNodes[0] : '';
-                    
-                    $this->logger->debug("Found resource: href='$href', contentType='$contentType'");
-                    
-                    // Check if it's a calendar file (.ics)
-                    if ($href && (strpos($href, '.ics') !== false || strpos($contentType, 'text/calendar') !== false)) {
-                        $this->logger->debug("Processing calendar file: $href");
-                        // Now fetch the actual calendar data with GET request
+                    // Get calendar-data directly from REPORT response (or fall back to GET for PROPFIND)
+                    $calDataNodes = $responseNode->xpath('d:propstat[d:status="HTTP/1.1 200 OK"]/d:prop/c:calendar-data');
+                    if ($calDataNodes && count($calDataNodes) > 0 && (string)$calDataNodes[0] !== '') {
+                        $calendarData = (string)$calDataNodes[0];
+                        $this->logger->debug("Got calendar-data inline for: $href");
+                    } else {
+                        // Fallback: fetch via GET (for PROPFIND-style responses)
+                        $propstatNodes = $responseNode->xpath('d:propstat[d:status="HTTP/1.1 200 OK"]/d:prop/d:getcontenttype');
+                        $contentType = $propstatNodes && count($propstatNodes) > 0 ? (string)$propstatNodes[0] : '';
+                        if (!$href || (strpos($href, '.ics') === false && strpos($contentType, 'text/calendar') === false)) {
+                            continue;
+                        }
+                        $this->logger->debug("Fetching calendar file via GET: $href");
                         $eventResponse = $client->request('GET', $href);
-                        
-                        if (isset($eventResponse['body'])) {
-                            $calendarData = $eventResponse['body'];
+                        if (!isset($eventResponse['body'])) {
+                            continue;
+                        }
+                        $calendarData = $eventResponse['body'];
+                    }
                             
                             try {
                                 $vcalendar = Reader::read($calendarData);
@@ -447,8 +457,6 @@ class SyncService {
                                 $this->logger->warning('Failed to parse calendar data from ' . $href . ': ' . $parseError->getMessage());
                                 continue;
                             }
-                        }
-                    }
                 }
             }
         } catch (\Exception $e) {
