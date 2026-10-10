@@ -89,7 +89,11 @@ class SyncController extends Controller {
      */
     public function status(): DataResponse {
         try {
-            $status = $this->syncService->getSyncStatus();
+            $user = $this->userSession->getUser();
+            if (!$user) {
+                return new DataResponse(['error' => 'Not logged in'], 401);
+            }
+            $status = $this->syncService->getSyncStatus($user->getUID());
             return new DataResponse($status);
         } catch (\Exception $e) {
             $this->logger->error('Failed to get sync status: ' . $e->getMessage(), [
