@@ -55,7 +55,8 @@ class ConfigService {
         bool $enabled = true,
         string $calendarSelection = 'personal',
         string $syncDirection = 'bidirectional',
-        string $duplicateHandling = 'update_newer'
+        string $duplicateHandling = 'update_newer',
+        string $authType = 'digest'
     ): array {
         $user = $this->userSession->getUser();
         if (!$user) {
@@ -64,6 +65,8 @@ class ConfigService {
 
         $encryptedPassword = $this->crypto->encrypt($password);
         $now = new \DateTime();
+        $url = trim($url);
+        $username = trim($username);
 
         $qb = $this->db->getQueryBuilder();
         $qb->insert('caldav_sync_configs')
@@ -77,6 +80,7 @@ class ConfigService {
                'calendar_selection' => $qb->createNamedParameter($calendarSelection),
                'sync_direction' => $qb->createNamedParameter($syncDirection),
                'duplicate_handling' => $qb->createNamedParameter($duplicateHandling),
+               'auth_type' => $qb->createNamedParameter($authType),
                'created_at' => $qb->createNamedParameter($now, 'datetime'),
                'updated_at' => $qb->createNamedParameter($now, 'datetime')
            ]);
@@ -108,10 +112,10 @@ class ConfigService {
             $qb->set('name', $qb->createNamedParameter($data['name']));
         }
         if (isset($data['url'])) {
-            $qb->set('url', $qb->createNamedParameter($data['url']));
+            $qb->set('url', $qb->createNamedParameter(trim($data['url'])));
         }
         if (isset($data['username'])) {
-            $qb->set('username', $qb->createNamedParameter($data['username']));
+            $qb->set('username', $qb->createNamedParameter(trim($data['username'])));
         }
         if (!empty($data['password'])) {
             $encryptedPassword = $this->crypto->encrypt($data['password']);
@@ -128,6 +132,9 @@ class ConfigService {
         }
         if (isset($data['duplicate_handling'])) {
             $qb->set('duplicate_handling', $qb->createNamedParameter($data['duplicate_handling']));
+        }
+        if (isset($data['auth_type']) && in_array($data['auth_type'], ['basic', 'digest'], true)) {
+            $qb->set('auth_type', $qb->createNamedParameter($data['auth_type']));
         }
 
         $qb->set('updated_at', $qb->createNamedParameter(new \DateTime(), 'datetime'));
@@ -184,6 +191,7 @@ class ConfigService {
             'calendar_selection' => $row['calendar_selection'] ?? 'personal',
             'sync_direction' => $row['sync_direction'] ?? 'bidirectional',
             'duplicate_handling' => $row['duplicate_handling'] ?? 'update_newer',
+            'auth_type' => $row['auth_type'] ?? 'digest',
             'sync_token' => $row['sync_token'],
             'last_sync' => $row['last_sync'],
             'created_at' => $row['created_at'],
@@ -197,16 +205,16 @@ class ConfigService {
             throw new \Exception('Configuration not found');
         }
 
-        return $this->testNewConnection($config['url'], $config['username'], $config['password']);
+        return $this->testNewConnection($config['url'], $config['username'], $config['password'], $config['auth_type'] ?? 'digest');
     }
 
-    public function testNewConnection(string $url, string $username, string $password): array {
+    public function testNewConnection(string $url, string $username, string $password, string $authType = 'digest'): array {
         try {
             $client = new Client([
                 'baseUri' => $url,
                 'userName' => $username,
                 'password' => $password,
-                'authType' => Client::AUTH_DIGEST  // Use Digest auth for All-Inkl compatibility
+                'authType' => $authType === 'basic' ? Client::AUTH_BASIC : Client::AUTH_DIGEST
             ]);
 
             // Simple connection test - just try PROPFIND like in working cURL test
@@ -220,7 +228,7 @@ class ConfigService {
                     'details' => [
                         'method' => 'PROPFIND',
                         'url' => $url,
-                        'auth_type' => 'Digest'
+                        'auth_type' => ucfirst($authType)
                     ]
                 ];
                 
@@ -231,7 +239,7 @@ class ConfigService {
                     'details' => [
                         'error' => $e->getMessage(),
                         'url' => $url,
-                        'auth_type' => 'Digest'
+                        'auth_type' => ucfirst($authType)
                     ]
                 ];
             }

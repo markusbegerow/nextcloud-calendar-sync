@@ -45,11 +45,12 @@ class SyncService {
             ]);
 
             // Connect to external CalDAV server
+            $authType = $config['auth_type'] ?? 'digest';
             $client = new Client([
                 'baseUri' => $config['url'],
                 'userName' => $config['username'],
                 'password' => $config['password'],
-                'authType' => Client::AUTH_DIGEST  // Use Digest auth for All-Inkl compatibility
+                'authType' => $authType === 'basic' ? Client::AUTH_BASIC : Client::AUTH_DIGEST
             ]);
 
             $userId = $config['user_id'];
@@ -846,8 +847,8 @@ class SyncService {
                 $uid = (string)$vcalendar->VEVENT->UID;
             }
             
-            // Create event on external server
-            $client->request('PUT', $uid . '.ics', $eventData, [
+            // Create event on external server (UID must be URL-encoded)
+            $client->request('PUT', rawurlencode($uid) . '.ics', $eventData, [
                 'Content-Type' => 'text/calendar'
             ]);
             
@@ -891,7 +892,7 @@ class SyncService {
     private function updateEventInExternal(Client $client, string $uid, string $eventData): void {
         try {
             $eventData = $this->addSyncSourceProperty($eventData, 'nextcloud');
-            $client->request('PUT', $uid . '.ics', $eventData, [
+            $client->request('PUT', rawurlencode($uid) . '.ics', $eventData, [
                 'Content-Type' => 'text/calendar'
             ]);
             $this->logger->debug("Updated event in external server: $uid");
@@ -903,7 +904,7 @@ class SyncService {
 
     private function deleteEventInExternal(Client $client, string $uid): void {
         try {
-            $client->request('DELETE', $uid . '.ics');
+            $client->request('DELETE', rawurlencode($uid) . '.ics');
             $this->logger->debug("Deleted event $uid from external server");
         } catch (\Exception $e) {
             $this->logger->error("Failed to delete event $uid from external server: " . $e->getMessage());

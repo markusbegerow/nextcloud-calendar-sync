@@ -1,5 +1,5 @@
 <?php
-script('calendar-sync', 'vendor/jquery.min');
+script('calendar-sync', 'lib/jquery.min');
 script('calendar-sync', 'calendar-sync-main');
 style('calendar-sync', 'style');
 ?>
@@ -238,6 +238,15 @@ style('calendar-sync', 'style');
             <div class="form-group">
                 <label for="config-password"><?php p($l->t('Password')); ?></label>
                 <input type="password" id="config-password" required>
+            </div>
+
+            <div class="form-group">
+                <label for="config-auth-type"><?php p($l->t('Authentication Type')); ?></label>
+                <select id="config-auth-type" required>
+                    <option value="digest"><?php p($l->t('Digest')); ?></option>
+                    <option value="basic"><?php p($l->t('Basic')); ?></option>
+                </select>
+                <small><?php p($l->t('Use Basic for most servers (e.g. SmarterMail); Digest for All-Inkl')); ?></small>
             </div>
 
             <div class="form-group">
