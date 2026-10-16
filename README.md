@@ -62,6 +62,13 @@
 |---|---|
 | Nextcloud | `https://cloud.example.com/remote.php/dav/calendars/user/calendar-name/` |
 | Generic CalDAV | `https://example.com/dav/calendars/user/default/` |
+| iCloud | `https://caldav.icloud.com/<dsid>/calendars/<calendar-guid>/` |
+
+### Authentication type
+
+Each configuration has an **Authentication type** setting (`Digest` or `Basic`). `Digest` is the default (e.g. All-Inkl). Some servers only accept `Basic` over HTTPS.
+
+**iCloud:** select **Basic** and use your Apple ID as username together with an [app-specific password](https://support.apple.com/en-us/102654) (not your normal Apple ID password). With `Digest`, iCloud answers `Unauthorized`.
 
 ---
 

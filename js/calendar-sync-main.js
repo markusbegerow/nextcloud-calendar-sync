@@ -48,9 +48,6 @@
             $('#close-modal, #cancel-btn').on('click', () => this.hideConfigModal());
             $('#config-form').on('submit', (e) => this.saveConfig(e));
             $('#test-connection-btn').on('click', () => this.testConnection());
-            $('#config-modal').on('click', function(e) {
-                if (e.target === this) CalDavSync.hideConfigModal();
-            });
 
             // Detail view actions
             $('#detail-sync-btn').on('click', () => this.syncNow());
