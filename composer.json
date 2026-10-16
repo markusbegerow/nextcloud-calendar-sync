@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "php": ">=8.0",
+        "php": ">=8.3",
         "sabre/dav": "^4.4",
         "sabre/vobject": "^4.5"
     },

@@ -5,6 +5,26 @@
 (function() {
     'use strict';
 
+    // NC34+: send CSRF token on all AJAX requests (fixes HTTP 412)
+    $.ajaxSetup({
+        headers: { 'requesttoken': OC.requestToken }
+    });
+
+    // NC34 removed OC.Notification; minimal toast shim
+    if (typeof OC.Notification === 'undefined') {
+        OC.Notification = {
+            showTemporary: function(text) {
+                const toast = document.createElement('div');
+                toast.textContent = text;
+                toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);'
+                    + 'background:#222;color:#fff;padding:12px 20px;border-radius:6px;z-index:10000;'
+                    + 'box-shadow:0 2px 8px rgba(0,0,0,0.3);font-size:14px;';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3500);
+            }
+        };
+    }
+
     let configs = [];
     let selectedConfigId = null;
     let userSettings = { autoRefreshInterval: 0, defaultSyncDirection: '', showSyncLogs: true };

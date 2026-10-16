@@ -3,6 +3,7 @@
 namespace OCA\CalDavSync\Service;
 
 use OCP\IDBConnection;
+use OCA\DAV\CalDAV\CalDavBackend;
 use OCP\Calendar\IManager as CalendarManager;
 use Psr\Log\LoggerInterface;
 use Sabre\DAV\Client;
@@ -12,17 +13,20 @@ use OCA\CalDavSync\Service\ConfigService;
 
 class SyncService {
     private IDBConnection $db;
+    private CalDavBackend $calDavBackend;
     private CalendarManager $calendarManager;
     private ConfigService $configService;
     private LoggerInterface $logger;
 
     public function __construct(
         IDBConnection $db,
+        CalDavBackend $calDavBackend,
         CalendarManager $calendarManager,
         ConfigService $configService,
         LoggerInterface $logger
     ) {
         $this->db = $db;
+        $this->calDavBackend = $calDavBackend;
         $this->calendarManager = $calendarManager;
         $this->configService = $configService;
         $this->logger = $logger;
@@ -50,9 +54,7 @@ class SyncService {
 
             $userId = $config['user_id'];
             $this->logger->debug('Getting calendars for user: ' . $userId);
-
-            $calDavBackend = \OC::$server->get(\OCA\DAV\CalDAV\CalDavBackend::class);
-            $rawCalendars = $calDavBackend->getCalendarsForUser('principals/users/' . $userId);
+            $rawCalendars = $this->calDavBackend->getCalendarsForUser('principals/users/' . $userId);
 
             $calendarSelection = !empty($config['calendar_selection']) ? $config['calendar_selection'] : 'personal';
             $calendarData = null;
@@ -467,7 +469,6 @@ class SyncService {
             // This is equivalent to Python's cal.events() method
             try {
                 // Get the CalDAV backend from the calendar
-                $calDavBackend = \OC::$server->get(\OCA\DAV\CalDAV\CalDavBackend::class);
                 
                 // Get calendar info
                 $calendarInfo = [
@@ -479,7 +480,7 @@ class SyncService {
                 $this->logger->debug('Using CalDAV backend to fetch calendar objects for calendar: ' . $calendar->getUri());
                 
                 // Get all calendar objects with their data (equivalent to Python's cal.events())
-                $calendarObjects = $calDavBackend->getCalendarObjects($calendarInfo['id']);
+                $calendarObjects = $this->calDavBackend->getCalendarObjects($calendarInfo['id']);
                 
                 $this->logger->debug('Found ' . count($calendarObjects) . ' calendar objects via CalDAV backend');
                 
@@ -493,7 +494,7 @@ class SyncService {
                         // Fetch the calendar data separately using the backend
                         $this->logger->debug('Calendar data not included, fetching separately for: ' . $object['uri']);
                         try {
-                            $objectData = $calDavBackend->getCalendarObject($calendarInfo['id'], $object['uri']);
+                            $objectData = $this->calDavBackend->getCalendarObject($calendarInfo['id'], $object['uri']);
                             $calendarData = $objectData['calendardata'] ?? null;
                             $this->logger->debug('Fetched calendar data separately: ' . (!empty($calendarData) ? 'SUCCESS' : 'FAILED'));
                         } catch (\Exception $fetchError) {
@@ -860,20 +861,18 @@ class SyncService {
         try {
             $eventData = $this->addSyncSourceProperty($eventData, 'external');
             $this->logger->debug("Starting updateEventInNextcloud for UID: $uid");
-            
-            $calDavBackend = \OC::$server->get(\OCA\DAV\CalDAV\CalDavBackend::class);
             $calendarId = $calendar->getKey();
             $this->logger->debug("Updating event in calendar ID: $calendarId");
 
             try {
-                $calDavBackend->updateCalendarObject($calendarId, $uid . '.ics', $eventData);
+                $this->calDavBackend->updateCalendarObject($calendarId, $uid . '.ics', $eventData);
                 $this->logger->debug("Updated event directly via CalDAV backend: $uid");
             } catch (\Exception $updateException) {
                 $this->logger->debug("Direct update failed, trying delete-then-create: " . $updateException->getMessage());
 
-                foreach ($calDavBackend->getCalendarObjects($calendarId) as $object) {
+                foreach ($this->calDavBackend->getCalendarObjects($calendarId) as $object) {
                     if (strpos($object['uri'], $uid) !== false) {
-                        $calDavBackend->deleteCalendarObject($calendarId, $object['uri']);
+                        $this->calDavBackend->deleteCalendarObject($calendarId, $object['uri']);
                         $this->logger->debug("Deleted existing event $uid for update");
                         break;
                     }
@@ -915,12 +914,10 @@ class SyncService {
     private function deleteEventInNextcloud($calendar, string $uid): void {
         try {
             $this->logger->debug("Starting deleteEventInNextcloud for UID: $uid");
-            
-            $calDavBackend = \OC::$server->get(\OCA\DAV\CalDAV\CalDavBackend::class);
             $calendarId = $calendar->getKey();
 
             // Find the calendar object by UID
-            $calendarObjects = $calDavBackend->getCalendarObjects($calendarId);
+            $calendarObjects = $this->calDavBackend->getCalendarObjects($calendarId);
             $objectUri = null;
             
             foreach ($calendarObjects as $object) {
@@ -953,7 +950,7 @@ class SyncService {
             }
             
             if ($objectUri) {
-                $calDavBackend->deleteCalendarObject($calendarId, $objectUri);
+                $this->calDavBackend->deleteCalendarObject($calendarId, $objectUri);
                 $this->logger->debug("Deleted event $uid (URI: $objectUri) from Nextcloud");
             } else {
                 $this->logger->warning("Could not find calendar object with UID $uid for deletion");

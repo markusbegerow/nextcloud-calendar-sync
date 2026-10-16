@@ -6,7 +6,7 @@
     <h2><?php p($l->t('Calendar Sync')) ?></h2>
     <p>
         <?php p($l->t('Manage your CalDAV sync configurations in the')) ?>
-        <a href="<?php p(\OC::$server->getURLGenerator()->linkToRoute('calendar-sync.page.index')) ?>">
+        <a href="<?php p($urlGenerator->linkToRoute('calendar-sync.page.index')) ?>">
             <?php p($l->t('Calendar Sync app')) ?>
         </a>.
     </p>
