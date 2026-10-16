@@ -1131,11 +1131,12 @@ class SyncService {
         $qb2->executeStatement();
     }
 
-    public function getSyncStatus(): array {
+    public function getSyncStatus(string $userId): array {
         $qb = $this->db->getQueryBuilder();
         $qb->select('l.*', 'c.name as config_name')
            ->from('caldav_sync_logs', 'l')
            ->join('l', 'caldav_sync_configs', 'c', $qb->expr()->eq('l.config_id', 'c.id'))
+           ->where($qb->expr()->eq('c.user_id', $qb->createNamedParameter($userId)))
            ->orderBy('l.started_at', 'DESC')
            ->setMaxResults(10);
 
